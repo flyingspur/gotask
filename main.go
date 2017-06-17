@@ -7,33 +7,33 @@ import (
 	"time"
 )
 
-type Task struct {
-	TaskDate int       `json:"date"`
-	TaskDesc string    `json:"desc"`
+type PostTask struct {
+	TaskDate int64     `json:"date"`
+	TaskDesc []string  `json:"desc"`
 	Created  time.Time `json:"created"`
 }
 
-var taskhash = make(map[int][]string)
+var taskmap = make(map[int64][]string)
 
 func PostTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var task Task
-	err := json.NewDecoder(r.Body).Decode(&task)
+
+	var msg PostTask
+	err := json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
 		panic(err)
 	}
-	taskhash[task.TaskDate] = append(taskhash[task.TaskDate], task.TaskDesc)
-	task.Created = time.Now()
-	j, err := json.Marshal(task)
-	if err != nil {
-		panic(err)
+	msg.Created = time.Now()
+	for _, v := range msg.TaskDesc {
+		taskmap[msg.TaskDate] = append(taskmap[msg.TaskDate], v)
 	}
+	j, err := json.Marshal(msg)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(j)
 }
 
 func GetTasksHandler(w http.ResponseWriter, r *http.Request) {
-	j, err := json.Marshal(taskhash)
+	j, err := json.Marshal(taskmap)
 	if err != nil {
 		panic(err)
 	}
